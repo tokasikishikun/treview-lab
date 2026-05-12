@@ -1,0 +1,80 @@
+---
+title: "Pine Script：変数・データ型・スコープを完全理解"
+description: "Pine Scriptの変数宣言・int/float/bool/string/colorなどのデータ型・var/varip・スコープのルールをコード例とともに解説します。"
+category: "pine-script"
+tags: ["beginner"]
+date: "2025-01-22"
+---
+
+## Pine Scriptの変数宣言
+
+Pine Scriptでは変数を`=`で宣言します。型推論があるため、型を明示しなくても動作します。
+
+```pine
+//@version=5
+indicator("変数サンプル")
+
+// 型推論（よく使う書き方）
+myLength = 14
+mySource = close
+
+// 型を明示する書き方
+int myLength2 = 14
+float myPrice = close
+bool isAbove = close > open
+string myLabel = "上昇"
+color myColor = color.blue
+```
+
+## 主なデータ型
+
+| 型 | 説明 | 例 |
+|----|------|----|
+| `int` | 整数 | `14`, `200` |
+| `float` | 小数 | `1.5`, `close` |
+| `bool` | 真偽値 | `true`, `false` |
+| `string` | 文字列 | `"hello"` |
+| `color` | 色 | `color.red`, `color.new(#FF0000, 50)` |
+
+## var と varip
+
+通常の変数はバーごとに再計算されますが、`var`を使うと値が保持されます。
+
+```pine
+//@version=5
+indicator("var サンプル")
+
+// 通常変数：毎バー初期化
+counter1 = 0
+counter1 := counter1 + 1  // 常に1になる
+
+// var変数：値が累積される
+var int counter2 = 0
+counter2 := counter2 + 1  // バーが増えるごとに増加
+
+plot(counter2, title="累積カウント")
+```
+
+## `:=` による再代入
+
+Pineでは宣言後に値を変更するときは`:=`を使います。
+
+```pine
+//@version=5
+indicator("再代入サンプル")
+
+var float highestHigh = 0.0
+
+if high > highestHigh
+    highestHigh := high  // :=で再代入
+
+plot(highestHigh, color=color.red)
+```
+
+## まとめ
+
+- 型推論で簡潔に書ける
+- `var`で値を跨いで保持
+- 再代入は`:=`を使う
+
+次は条件分岐（`if`文）と関数の作り方に進みましょう。

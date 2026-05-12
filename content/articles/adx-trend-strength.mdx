@@ -1,0 +1,80 @@
+---
+title: "ADX（平均方向性指数）でトレンドの強さを測る"
+description: "ADX・+DI・-DIの見方とトレンド判定の方法をTradingViewとPine Scriptで解説。ADX値の目安とフィルター活用術を紹介します。"
+category: "indicators"
+tags: ["intermediate"]
+date: "2025-02-05"
+---
+
+## ADXとは
+
+ADX（Average Directional Index）は、トレンドの「方向」ではなく「強さ」を示すインジケーターです。0〜100の値で表され、数値が大きいほどトレンドが強いことを意味します。
+
+## 構成要素
+
+| 要素 | 説明 |
+|------|------|
+| ADX | トレンドの強さ（方向なし） |
+| +DI | 上昇方向の強さ |
+| −DI | 下降方向の強さ |
+
+## ADX値の目安
+
+| ADX値 | 相場の状態 |
+|-------|-----------|
+| 0〜20 | トレンドなし（レンジ） |
+| 20〜40 | 中程度のトレンド |
+| 40〜60 | 強いトレンド |
+| 60以上 | 非常に強いトレンド |
+
+## Pine Scriptで実装
+
+```pine
+//@version=5
+indicator("ADX カスタム", overlay=false)
+
+length = input.int(14, "期間")
+
+[plusDI, minusDI, adxVal] = ta.dmi(length, length)
+
+// ADXが20以上でトレンドありと判断
+isTrending = adxVal >= 20
+adxColor   = isTrending ? color.blue : color.gray
+
+plot(adxVal,   title="ADX",  color=adxColor, linewidth=2)
+plot(plusDI,   title="+DI",  color=color.green)
+plot(minusDI,  title="-DI",  color=color.red)
+
+hline(20, "+DI/-DI基準", color=color.gray,  linestyle=hline.style_dashed)
+hline(40, "強いトレンド", color=color.orange, linestyle=hline.style_dashed)
+```
+
+## ADXをフィルターとして使う
+
+ADXの最大の使い方は「他のインジケーターのフィルター」です。
+
+```pine
+//@version=5
+indicator("ADXフィルター付きMAクロス", overlay=true)
+
+maFast = ta.ema(close, 20)
+maSlow = ta.ema(close, 50)
+
+[_, _, adxVal] = ta.dmi(14, 14)
+
+// ADXが25以上のときだけクロスシグナルを有効にする
+isTrending = adxVal >= 25
+
+goldenCross = ta.crossover(maFast, maSlow)  and isTrending
+deadCross   = ta.crossunder(maFast, maSlow) and isTrending
+
+plot(maFast, color=color.blue)
+plot(maSlow, color=color.orange)
+
+plotshape(goldenCross, style=shape.triangleup,   location=location.belowbar, color=color.green)
+plotshape(deadCross,   style=shape.triangledown, location=location.abovebar, color=color.red)
+```
+
+## まとめ
+
+ADXはトレンド相場とレンジ相場を区別するのに非常に有効です。MAクロスやRSIなどのシグナルと組み合わせて、**レンジ相場の誤シグナルを除外する**用途で積極的に活用しましょう。

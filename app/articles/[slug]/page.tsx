@@ -27,13 +27,30 @@ const categoryLabels: Record<string, string> = {
   tradingview: "TradingView使い方",
 };
 
+const BASE_URL = "https://tradingview-jp.vercel.app";
+
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params;
   const article = getArticleBySlug(slug);
   if (!article) notFound();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.description,
+    datePublished: article.date,
+    url: `${BASE_URL}/articles/${slug}`,
+    publisher: {
+      "@type": "Organization",
+      name: "TradingView JP",
+      url: BASE_URL,
+    },
+  };
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Breadcrumb */}
       <nav className="text-sm text-slate-400 mb-6 flex items-center gap-2">
         <Link href="/" className="hover:text-blue-600">ホーム</Link>

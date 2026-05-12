@@ -1,0 +1,86 @@
+---
+title: "移動平均線ゴールデンクロス手法をPine Scriptで実装する"
+description: "定番のゴールデンクロス・デッドクロス手法をPine Scriptで実装する方法を解説。エントリー・エグジット条件のコード化とバックテスト設定まで説明します。"
+category: "methods"
+tags: ["beginner"]
+date: "2025-02-12"
+---
+
+## ゴールデンクロス手法とは
+
+短期移動平均線が長期移動平均線を下から上に突き抜けたときに買い、上から下に突き抜けたときに売る手法です。トレンドフォロー系の基本として広く知られています。
+
+## 基本実装
+
+```pine
+//@version=5
+strategy("MAクロス戦略", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+
+fastLen = input.int(20, "短期MA期間")
+slowLen = input.int(50, "長期MA期間")
+
+maFast = ta.ema(close, fastLen)
+maSlow = ta.ema(close, slowLen)
+
+goldenCross = ta.crossover(maFast, maSlow)
+deadCross   = ta.crossunder(maFast, maSlow)
+
+// エントリー・エグジット
+if goldenCross
+    strategy.entry("買い", strategy.long)
+
+if deadCross
+    strategy.close("買い")
+
+plot(maFast, color=color.blue,   title="短期MA")
+plot(maSlow, color=color.orange, title="長期MA")
+
+plotshape(goldenCross, style=shape.triangleup,   location=location.belowbar, color=color.green, size=size.small)
+plotshape(deadCross,   style=shape.triangledown, location=location.abovebar, color=color.red,   size=size.small)
+```
+
+## ADXフィルターを追加して精度を上げる
+
+レンジ相場での誤シグナルを減らすため、ADXフィルターを追加します。
+
+```pine
+//@version=5
+strategy("MAクロス + ADXフィルター", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+
+fastLen    = input.int(20,  "短期MA")
+slowLen    = input.int(50,  "長期MA")
+adxThresh  = input.int(25,  "ADX閾値")
+
+maFast = ta.ema(close, fastLen)
+maSlow = ta.ema(close, slowLen)
+
+[_, _, adxVal] = ta.dmi(14, 14)
+isTrending = adxVal >= adxThresh
+
+goldenCross = ta.crossover(maFast, maSlow)  and isTrending
+deadCross   = ta.crossunder(maFast, maSlow) and isTrending
+
+if goldenCross
+    strategy.entry("買い", strategy.long)
+
+if deadCross
+    strategy.close("買い")
+
+plot(maFast, color=color.blue)
+plot(maSlow, color=color.orange)
+bgcolor(not isTrending ? color.new(color.gray, 92) : na, title="レンジ相場")
+```
+
+## バックテストの見方
+
+`strategy()`関数を使うと、TradingViewの「ストラテジーテスター」でバックテストが実行されます。
+
+確認すべき指標：
+- **純損益** — 総合的な損益
+- **勝率** — 勝ちトレードの割合
+- **プロフィットファクター** — 総利益 ÷ 総損失（1.5以上が目安）
+- **最大ドローダウン** — 最大の含み損
+
+## まとめ
+
+ゴールデンクロスは単純ですが、ADXフィルターの追加だけで大幅に精度が改善することが多いです。まずはシンプルな実装でバックテストし、徐々に条件を追加していく進め方がおすすめです。

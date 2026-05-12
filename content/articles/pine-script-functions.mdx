@@ -1,0 +1,92 @@
+---
+title: "Pine Script：関数の定義と使い方"
+description: "Pine Scriptで独自関数を定義する方法を解説。引数・戻り値・複数戻り値・再帰まで、コード例とともに実践的に説明します。"
+category: "pine-script"
+tags: ["intermediate"]
+date: "2025-01-25"
+---
+
+## 関数の基本構文
+
+Pine Scriptの関数は以下の構文で定義します。
+
+```pine
+関数名(引数1, 引数2) =>
+    // 処理
+    戻り値
+```
+
+## シンプルな関数の例
+
+```pine
+//@version=5
+indicator("関数サンプル", overlay=true)
+
+// 2つの値の平均を返す関数
+average(a, b) =>
+    (a + b) / 2
+
+mid = average(high, low)
+plot(mid, color=color.orange, title="高安中値")
+```
+
+## 複数の戻り値
+
+`[値1, 値2]`の形式で複数の値を返せます。
+
+```pine
+//@version=5
+indicator("複数戻り値", overlay=false)
+
+// 高値・安値・中値を返す関数
+hlMid(len) =>
+    h = ta.highest(high, len)
+    l = ta.lowest(low, len)
+    m = (h + l) / 2
+    [h, l, m]
+
+[h, l, m] = hlMid(20)
+
+plot(h, color=color.red, title="高値")
+plot(l, color=color.green, title="安値")
+plot(m, color=color.blue, title="中値")
+```
+
+## 型付き引数
+
+引数に型を指定することで意図を明確にできます。
+
+```pine
+//@version=5
+indicator("型付き引数", overlay=false)
+
+// series float型の引数を受け取る
+rsiSignal(src, length, overbought, oversold) =>
+    rsi = ta.rsi(src, length)
+    isBuy  = ta.crossover(rsi, oversold)
+    isSell = ta.crossunder(rsi, overbought)
+    [rsi, isBuy, isSell]
+
+[rsiVal, buy, sell] = rsiSignal(close, 14, 70, 30)
+
+plot(rsiVal)
+plotshape(buy,  style=shape.triangleup,   location=location.bottom, color=color.green)
+plotshape(sell, style=shape.triangledown, location=location.top,    color=color.red)
+```
+
+## よく使う組み込み関数一覧
+
+| 関数 | 説明 |
+|------|------|
+| `ta.sma(src, len)` | 単純移動平均 |
+| `ta.ema(src, len)` | 指数移動平均 |
+| `ta.rsi(src, len)` | RSI |
+| `ta.macd(src, fast, slow, sig)` | MACD |
+| `ta.crossover(a, b)` | aがbを上抜け |
+| `ta.crossunder(a, b)` | aがbを下抜け |
+| `ta.highest(src, len)` | 期間内最高値 |
+| `ta.lowest(src, len)` | 期間内最安値 |
+
+## まとめ
+
+関数化することで、同じロジックを複数のインジケーターで再利用できます。複雑なストラテジーを書くときは積極的に関数を使いましょう。

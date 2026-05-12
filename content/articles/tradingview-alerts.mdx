@@ -1,0 +1,74 @@
+---
+title: "TradingViewのアラート設定方法【完全ガイド】"
+description: "TradingViewのアラート機能の設定手順・条件の作り方・Pine Scriptからのアラート実装まで、スクリーンショットを使わず文章でわかりやすく解説します。"
+category: "tradingview"
+tags: ["beginner"]
+date: "2025-02-08"
+---
+
+## TradingViewのアラートとは
+
+TradingViewのアラートは、設定した条件が満たされたときにメール・プッシュ通知・Webhookなどで通知を受け取れる機能です。パソコンを見ていなくてもチャンスを逃しません。
+
+## アラートの設定手順
+
+1. チャート上部の時計アイコン（または `Alt+A`）をクリック
+2. 「アラートを作成」をクリック
+3. 条件を設定
+4. 通知方法を選択（メール・アプリ・Webhookなど）
+5. 「作成」をクリック
+
+## 条件の種類
+
+| 条件タイプ | 説明 |
+|-----------|------|
+| クロス | 2つの系列が交差したとき |
+| クロスアップ | 下から上に突き抜けたとき |
+| クロスダウン | 上から下に突き抜けたとき |
+| 以上 | 指定値以上になったとき |
+| 以下 | 指定値以下になったとき |
+
+## Pine Scriptからアラートを設定
+
+```pine
+//@version=5
+indicator("アラートサンプル", overlay=true)
+
+ma20 = ta.ema(close, 20)
+ma50 = ta.ema(close, 50)
+
+goldenCross = ta.crossover(ma20, ma50)
+deadCross   = ta.crossunder(ma20, ma50)
+
+plot(ma20, color=color.blue)
+plot(ma50, color=color.orange)
+
+// alertcondition でアラート条件を定義
+alertcondition(goldenCross, title="ゴールデンクロス", message="20EMAが50EMAを上抜け — {{ticker}} {{interval}}")
+alertcondition(deadCross,   title="デッドクロス",     message="20EMAが50EMAを下抜け — {{ticker}} {{interval}}")
+```
+
+スクリプトをチャートに追加した後、アラート作成画面で「条件」に「ゴールデンクロス」や「デッドクロス」が選択肢として表示されます。
+
+## メッセージ変数
+
+| 変数 | 内容 |
+|------|------|
+| `{{ticker}}` | 銘柄コード |
+| `{{interval}}` | 時間足 |
+| `{{close}}` | 終値 |
+| `{{time}}` | 発生時刻 |
+
+## Webhookで外部ツールに通知
+
+Webhook URLを設定すると、Discordやスプレッドシートなどに自動でデータを送れます。
+
+```json
+{
+  "content": "{{ticker}} でシグナル発生 — 価格: {{close}}"
+}
+```
+
+## まとめ
+
+アラート機能を使えば常にチャートを監視する必要がなくなります。Pine Scriptと組み合わせると、複雑な複数条件のアラートも自由に設定できます。

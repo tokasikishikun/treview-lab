@@ -1,0 +1,87 @@
+---
+title: "ボリンジャーバンド（BB）の使い方と設定【TradingView】"
+description: "ボリンジャーバンドの仕組み・バンドウォーク・スクイーズ・エクスパンションの見方をTradingViewとPine Scriptで解説します。"
+category: "indicators"
+tags: ["beginner"]
+date: "2025-02-01"
+---
+
+## ボリンジャーバンドとは
+
+ボリンジャーバンド（BB）は、移動平均線を中心に「±2σ（標準偏差）」のバンドを描くインジケーターです。価格がバンド内に収まる確率は統計的に約95%とされています。
+
+## 構成要素
+
+| 要素 | 説明 |
+|------|------|
+| ミドルバンド | 20期間SMA |
+| アッパーバンド | ミドル + 2σ |
+| ロワーバンド | ミドル − 2σ |
+
+## 主な見方
+
+### バンドウォーク
+強いトレンド時に価格がアッパー（またはロワー）バンドに沿って動く状態。トレンドフォローの根拠になります。
+
+### スクイーズ（収縮）
+バンド幅が狭くなる状態。ボラティリティ低下を示し、大きな動きの前兆になることがあります。
+
+### エクスパンション（拡張）
+バンド幅が広がる状態。強いトレンドや急騰・急落の際に見られます。
+
+## Pine Scriptで実装
+
+```pine
+//@version=5
+indicator("ボリンジャーバンド カスタム", overlay=true)
+
+length = input.int(20, "期間")
+mult   = input.float(2.0, "標準偏差の倍率", step=0.1)
+src    = input.source(close, "ソース")
+
+basis = ta.sma(src, length)
+dev   = mult * ta.stdev(src, length)
+
+upper = basis + dev
+lower = basis - dev
+
+// バンド描画
+plot(upper,  title="アッパー", color=color.blue)
+plot(basis,  title="ミドル",   color=color.gray)
+plot(lower,  title="ロワー",   color=color.blue)
+
+// バンド内を塗りつぶし
+band = plot(upper, display=display.none)
+band2 = plot(lower, display=display.none)
+fill(band, band2, color=color.new(color.blue, 90))
+
+// %B（価格のバンド内位置）
+percentB = (src - lower) / (upper - lower) * 100
+```
+
+## バンド幅（BBW）でスクイーズを検出
+
+```pine
+//@version=5
+indicator("BBW スクイーズ検出", overlay=false)
+
+length = input.int(20, "BB期間")
+mult   = input.float(2.0, "倍率")
+
+basis = ta.sma(close, length)
+dev   = mult * ta.stdev(close, length)
+upper = basis + dev
+lower = basis - dev
+
+bbw = (upper - lower) / basis * 100
+
+// 直近20本の最低BBWを下回ったらスクイーズ判定
+isSqueezing = bbw == ta.lowest(bbw, 20)
+
+plot(bbw, title="BBW%", color=color.blue)
+bgcolor(isSqueezing ? color.new(color.yellow, 85) : na, title="スクイーズ")
+```
+
+## まとめ
+
+ボリンジャーバンドは単体よりもRSIやMACDと組み合わせると精度が上がります。スクイーズ後のブレイクアウト方向をMACDで確認するのが定番の使い方です。

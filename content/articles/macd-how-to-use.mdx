@@ -1,0 +1,64 @@
+---
+title: "MACD（移動平均収束拡散法）の使い方【TradingView】"
+description: "MACDの仕組み・見方・シグナルの読み取り方をTradingViewの設定と合わせて解説。ゴールデンクロス・ダイバージェンスの活用方法も説明します。"
+category: "indicators"
+tags: ["beginner"]
+date: "2025-01-28"
+---
+
+## MACDとは
+
+MACD（Moving Average Convergence Divergence）は、2本のEMAの差を使ってトレンドの方向と勢いを判断するインジケーターです。
+
+## 構成要素
+
+| 要素 | 説明 | デフォルト設定 |
+|------|------|--------------|
+| MACDライン | 短期EMA − 長期EMA | 12EMA − 26EMA |
+| シグナルライン | MACDラインのEMA | 9EMA |
+| ヒストグラム | MACDライン − シグナルライン | — |
+
+## 基本的なシグナル
+
+**ゴールデンクロス（買い）**
+MACDラインがシグナルラインを下から上に突き抜けたとき。
+
+**デッドクロス（売り）**
+MACDラインがシグナルラインを上から下に突き抜けたとき。
+
+## Pine ScriptでMACDを実装
+
+```pine
+//@version=5
+indicator("MACD カスタム", overlay=false)
+
+fastLen   = input.int(12, "短期EMA期間")
+slowLen   = input.int(26, "長期EMA期間")
+signalLen = input.int(9,  "シグナル期間")
+
+[macdLine, signalLine, hist] = ta.macd(close, fastLen, slowLen, signalLen)
+
+// ヒストグラムの色（正負で変える）
+histColor = hist >= 0 ? color.new(color.green, 20) : color.new(color.red, 20)
+
+plot(macdLine,   title="MACD",     color=color.blue,  linewidth=2)
+plot(signalLine, title="Signal",   color=color.orange, linewidth=2)
+plot(hist,       title="Hist",     style=plot.style_columns, color=histColor)
+hline(0, color=color.gray, linestyle=hline.style_dotted)
+
+// クロスのアラート条件
+goldenCross = ta.crossover(macdLine, signalLine)
+deadCross   = ta.crossunder(macdLine, signalLine)
+
+plotshape(goldenCross, style=shape.triangleup,   location=location.bottom, color=color.green, size=size.small)
+plotshape(deadCross,   style=shape.triangledown, location=location.top,    color=color.red,   size=size.small)
+```
+
+## ゼロラインとの関係
+
+- MACDラインがゼロ以上 → 短期EMAが長期EMAを上回っている（上昇トレンド）
+- MACDラインがゼロ以下 → 短期EMAが長期EMAを下回っている（下降トレンド）
+
+## 注意点
+
+MACDはトレンドフォロー型の指標です。レンジ相場では誤シグナルが多くなるため、ADXなどでトレンドの強さを確認してから使うのがおすすめです。
