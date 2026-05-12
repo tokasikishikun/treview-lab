@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 type Props = {
   symbol?: string;
   interval?: string;
@@ -22,22 +24,41 @@ export default function TradingViewChart({
   studies = [],
   height = 550,
 }: Props) {
-  const params = new URLSearchParams({
-    symbol,
-    interval,
-    timezone: "Asia/Tokyo",
-    theme: "light",
-    style: "1",
-    locale: "ja",
-    hide_side_toolbar: "1",
-    allow_symbol_change: "1",
-    save_image: "0",
-    hide_volume: "0",
-  });
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  studies.forEach((s) => params.append("studies", s));
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const container = containerRef.current;
+    container.innerHTML = "";
 
-  const src = `https://www.tradingview.com/widgetembed/?${params.toString()}`;
+    const config = {
+      autosize: true,
+      symbol,
+      interval,
+      timezone: "Asia/Tokyo",
+      theme: "light",
+      style: "1",
+      locale: "ja",
+      enable_publishing: false,
+      allow_symbol_change: true,
+      hide_side_toolbar: true,
+      save_image: false,
+      studies,
+      support_host: "https://www.tradingview.com",
+    };
+
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src =
+      "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.async = true;
+    script.innerHTML = JSON.stringify(config);
+    container.appendChild(script);
+
+    return () => {
+      container.innerHTML = "";
+    };
+  }, [symbol, interval, height, studies]);
 
   return (
     <div className="my-8 rounded-xl overflow-hidden border border-slate-200 shadow-sm not-prose">
@@ -51,16 +72,16 @@ export default function TradingViewChart({
         {studies.length > 0 && (
           <>
             <span className="text-slate-500">·</span>
-            <span className="text-blue-400">{studies.map((s) => s.split("@")[0]).join(" / ")}</span>
+            <span className="text-blue-400">
+              {studies.map((s) => s.split("@")[0]).join(" / ")}
+            </span>
           </>
         )}
       </div>
-      <iframe
-        src={src}
-        style={{ width: "100%", height }}
-        frameBorder="0"
-        allowFullScreen
-        scrolling="no"
+      <div
+        ref={containerRef}
+        className="tradingview-widget-container__widget"
+        style={{ height }}
       />
     </div>
   );
