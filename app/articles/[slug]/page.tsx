@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAllArticles, getArticleBySlug } from "@/lib/articles";
 import { MDXRemote } from "next-mdx-remote/rsc";
+import TradingViewChart from "@/components/TradingViewChart";
+
+const mdxComponents = { TradingViewChart };
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -86,7 +89,7 @@ export default async function ArticlePage({ params }: Props) {
 
       {/* Content */}
       <article className="prose prose-slate max-w-none prose-headings:font-bold prose-a:text-blue-600 prose-code:text-sm">
-        <MDXRemote source={article.content} />
+        <MDXRemote source={article.content} components={mdxComponents} />
       </article>
     </div>
   );
