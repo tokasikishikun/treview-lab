@@ -1,0 +1,74 @@
+---
+title: "Pine Script入門：基本構文と最初のスクリプト"
+description: "Pine Scriptの基本的な構文を解説します。変数・条件分岐・プロット関数など、最初のインジケーター作成に必要な知識を日本語でわかりやすく説明します。"
+category: "pine-script"
+tags: ["beginner"]
+date: "2025-01-15"
+---
+
+## Pine Scriptとは
+
+Pine Scriptは、TradingViewのチャート上でインジケーターやストラテジーを作成するためのプログラミング言語です。複雑な数式も数行で実装でき、バックテストまで一貫して行えます。
+
+## 最初のスクリプト
+
+以下は、終値の20日移動平均線を表示する最もシンプルなスクリプトです。
+
+```pine
+//@version=5
+indicator("シンプルMA", overlay=true)
+
+ma = ta.sma(close, 20)
+plot(ma, color=color.blue, linewidth=2)
+```
+
+### コードの解説
+
+- `//@version=5` — Pine Script v5を使用することを宣言
+- `indicator()` — これがインジケーターであることを宣言。`overlay=true`でローソク足の上に表示
+- `ta.sma(close, 20)` — 終値の20期間単純移動平均を計算
+- `plot()` — 値をチャート上に描画
+
+## 変数の宣言
+
+```pine
+//@version=5
+indicator("変数のサンプル", overlay=false)
+
+// 数値型
+length = 14
+
+// 系列型（各バーの値）
+rsiValue = ta.rsi(close, length)
+
+plot(rsiValue)
+```
+
+## 条件分岐（if文）
+
+```pine
+//@version=5
+indicator("条件分岐サンプル", overlay=true)
+
+ma20 = ta.sma(close, 20)
+ma50 = ta.sma(close, 50)
+
+// 20MAが50MAを上回っている場合に色を変える
+barColor = ma20 > ma50 ? color.green : color.red
+barcolor(barColor)
+```
+
+## よく使う組み込み変数
+
+| 変数 | 意味 |
+|------|------|
+| `close` | 終値 |
+| `open` | 始値 |
+| `high` | 高値 |
+| `low` | 安値 |
+| `volume` | 出来高 |
+| `bar_index` | バー番号（左から0始まり） |
+
+## まとめ
+
+Pine Scriptの基本は `indicator()` または `strategy()` の宣言から始まり、`plot()` で値を描画するシンプルな構造です。次のステップとして、アラート条件の設定やエントリー・エグジットロジックの実装に挑戦してみましょう。

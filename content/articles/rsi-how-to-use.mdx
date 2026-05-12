@@ -1,0 +1,60 @@
+---
+title: "RSI（相対力指数）の使い方と設定方法【TradingView】"
+description: "RSI（Relative Strength Index）の基本的な見方・設定方法・売買シグナルの読み方をTradingViewの操作画面と合わせて解説します。"
+category: "indicators"
+tags: ["beginner"]
+date: "2025-01-20"
+---
+
+## RSIとは
+
+RSI（相対力指数）は、一定期間における価格の上昇・下落の強さを0〜100の数値で表すオシレーター系インジケーターです。1978年にJ・ウェルズ・ワイルダー氏が考案しました。
+
+## TradingViewでのRSI追加方法
+
+1. チャート上部の「インジケーター」をクリック
+2. 検索欄に「RSI」と入力
+3. 「Relative Strength Index」を選択
+
+## 基本的な見方
+
+| RSI値 | 一般的な解釈 |
+|-------|-------------|
+| 70以上 | 買われすぎ（売りシグナルの候補） |
+| 30以下 | 売られすぎ（買いシグナルの候補） |
+| 50付近 | トレンドの分岐点 |
+
+## Pine ScriptでRSIを実装する
+
+```pine
+//@version=5
+indicator("RSI カスタム", overlay=false)
+
+length = input.int(14, title="期間", minval=1)
+src = input.source(close, title="ソース")
+
+rsiValue = ta.rsi(src, length)
+
+// 基準線の描画
+hline(70, "買われすぎ", color=color.red, linestyle=hline.style_dashed)
+hline(30, "売られすぎ", color=color.green, linestyle=hline.style_dashed)
+hline(50, "中立", color=color.gray, linestyle=hline.style_dotted)
+
+// RSIのプロット
+rsiColor = rsiValue >= 70 ? color.red : rsiValue <= 30 ? color.green : color.blue
+plot(rsiValue, title="RSI", color=rsiColor, linewidth=2)
+```
+
+## ダイバージェンスの活用
+
+RSIで特に重要なのが「ダイバージェンス」です。
+
+**強気ダイバージェンス（買いシグナル）**
+- 価格が安値更新 → RSIは安値更新せず（底打ちの可能性）
+
+**弱気ダイバージェンス（売りシグナル）**
+- 価格が高値更新 → RSIは高値更新せず（天井の可能性）
+
+## 注意点
+
+RSIはあくまでも補助的なツールです。単体での判断は避け、トレンド系インジケーター（移動平均線・ADXなど）と組み合わせて使用することをおすすめします。
