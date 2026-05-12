@@ -35,7 +35,7 @@ export default function Footer() {
           <p className="mb-2">
             本サイトの情報は教育・情報提供を目的としており、投資助言ではありません。売買の最終判断はご自身の責任で行ってください。
           </p>
-          <p>© 2025 TradingView JP. All rights reserved.</p>
+          <p>© 2025 トレビュー研究所. All rights reserved.</p>
         </div>
       </div>
     </footer>

@@ -18,8 +18,8 @@ export default function Home() {
       <section className="bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 py-16 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 leading-tight">
-            TradingViewを使いこなすための<br className="hidden md:block" />
-            日本語情報サイト
+            Pine Script・テクニカル分析の<br className="hidden md:block" />
+            日本語解説サイト「トレビュー研究所」
           </h1>
           <p className="text-slate-500 text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
             Pine Script・インジケーター・テクニカル手法を体系的に解説。<br />

@@ -5,16 +5,16 @@ import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: {
-    default: "TradingView JP - Pine Script・テクニカル分析を日本語で",
-    template: "%s | TradingView JP",
+    default: "トレビュー研究所 - Pine Script・テクニカル分析を日本語で",
+    template: "%s | トレビュー研究所",
   },
   description:
-    "TradingViewのPine Script・インジケーター・テクニカル手法を日本語で体系的に解説。初心者から中級者まで、為替トレードに役立つ情報を提供します。",
-  keywords: ["TradingView", "Pine Script", "テクニカル分析", "インジケーター", "為替", "FX"],
+    "Pine Script・インジケーター・テクニカル手法を日本語で体系的に解説。初心者から中級者まで、為替トレードに役立つ情報を提供します。",
+  keywords: ["Pine Script", "TradingView", "テクニカル分析", "インジケーター", "為替", "FX"],
   openGraph: {
     type: "website",
     locale: "ja_JP",
-    siteName: "TradingView JP",
+    siteName: "トレビュー研究所",
   },
 };
 
