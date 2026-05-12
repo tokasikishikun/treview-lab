@@ -1,15 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-
-declare global {
-  interface Window {
-    TradingView: {
-      widget: new (config: Record<string, unknown>) => void;
-    };
-  }
-}
-
 type Props = {
   symbol?: string;
   interval?: string;
@@ -32,43 +22,22 @@ export default function TradingViewChart({
   studies = [],
   height = 550,
 }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const widgetId = useRef<string>("");
+  const params = new URLSearchParams({
+    symbol,
+    interval,
+    timezone: "Asia/Tokyo",
+    theme: "light",
+    style: "1",
+    locale: "ja",
+    hide_side_toolbar: "1",
+    allow_symbol_change: "1",
+    save_image: "0",
+    hide_volume: "0",
+  });
 
-  useEffect(() => {
-    widgetId.current = `tv_${Math.random().toString(36).slice(2)}`;
-    if (!containerRef.current) return;
+  studies.forEach((s) => params.append("studies", s));
 
-    const container = containerRef.current;
-    container.innerHTML = `<div id="${widgetId.current}" style="height:${height}px"></div>`;
-
-    const script = document.createElement("script");
-    script.src = "https://s3.tradingview.com/tv.js";
-    script.async = true;
-    script.onload = () => {
-      if (typeof window.TradingView === "undefined") return;
-      new window.TradingView.widget({
-        width: "100%",
-        height,
-        symbol,
-        interval,
-        timezone: "Asia/Tokyo",
-        theme: "light",
-        style: "1",
-        locale: "ja",
-        studies: studies.map((s) => ({ id: s })),
-        hide_side_toolbar: true,
-        allow_symbol_change: true,
-        save_image: false,
-        container_id: widgetId.current,
-      });
-    };
-    container.appendChild(script);
-
-    return () => {
-      container.innerHTML = "";
-    };
-  }, [symbol, interval, height, studies]);
+  const src = `https://www.tradingview.com/widgetembed/?${params.toString()}`;
 
   return (
     <div className="my-8 rounded-xl overflow-hidden border border-slate-200 shadow-sm not-prose">
@@ -82,11 +51,17 @@ export default function TradingViewChart({
         {studies.length > 0 && (
           <>
             <span className="text-slate-500">·</span>
-            <span className="text-blue-400">{studies.map(s => s.split("@")[0]).join(" / ")}</span>
+            <span className="text-blue-400">{studies.map((s) => s.split("@")[0]).join(" / ")}</span>
           </>
         )}
       </div>
-      <div ref={containerRef} style={{ height }} />
+      <iframe
+        src={src}
+        style={{ width: "100%", height }}
+        frameBorder="0"
+        allowFullScreen
+        scrolling="no"
+      />
     </div>
   );
 }
