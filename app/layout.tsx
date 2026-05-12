@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   description:
     "Pine Script・インジケーター・テクニカル手法を日本語で体系的に解説。初心者から中級者まで、為替トレードに役立つ情報を提供します。",
   keywords: ["Pine Script", "TradingView", "テクニカル分析", "インジケーター", "為替", "FX"],
+  verification: {
+    google: "YelDP0xXq2hJTwaPkHdPXmjPf5WZM7w3th-FU2n35OA",
+  },
   openGraph: {
     type: "website",
     locale: "ja_JP",
