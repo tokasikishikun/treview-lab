@@ -1,0 +1,103 @@
+---
+title: "RSIダイバージェンス手法をPine Scriptで実装する"
+description: "RSIダイバージェンス（強気・弱気）の見つけ方と自動検出コードをPine Scriptで実装します。スイングポイントを使った精度の高いダイバージェンス検出を解説します。"
+category: "methods"
+tags: ["intermediate"]
+date: "2025-03-12"
+---
+
+## ダイバージェンスとは
+
+価格とRSIの方向が乖離している状態です。トレンド転換の先行シグナルとして活用されます。
+
+**強気ダイバージェンス（買いシグナル）**
+- 価格：安値切り下げ
+- RSI：安値切り上げ
+→ 下落勢力が弱まっている
+
+**弱気ダイバージェンス（売りシグナル）**
+- 価格：高値切り上げ
+- RSI：高値切り下げ
+→ 上昇勢力が弱まっている
+
+## 手動での見つけ方
+
+1. 価格チャートでスイングローを2つ探す
+2. RSIで同じ位置のスイングローを確認
+3. 価格が下がっているのにRSIが上がっていれば強気ダイバージェンス
+
+## Pine Scriptで自動検出
+
+```pine
+//@version=5
+indicator("RSIダイバージェンス", overlay=false)
+
+rsiLength = input.int(14, "RSI期間")
+lbR       = input.int(5,  "右ピボットバー数")
+lbL       = input.int(5,  "左ピボットバー数")
+rangeUpper = input.int(60, "RSI上限")
+rangeLower = input.int(40, "RSI下限")
+
+rsiVal = ta.rsi(close, rsiLength)
+
+plFound = not na(ta.pivotlow(rsiVal, lbL, lbR))
+phFound = not na(ta.pivothigh(rsiVal, lbL, lbR))
+
+// 強気ダイバージェンス：価格安値切り下げ & RSI安値切り上げ
+bullCond = plFound
+    and rsiVal[lbR] < rangeLower
+    and rsiVal[lbR] > ta.valuewhen(plFound, rsiVal[lbR], 1)
+    and low[lbR]    < ta.valuewhen(plFound, low[lbR],    1)
+
+// 弱気ダイバージェンス：価格高値切り上げ & RSI高値切り下げ
+bearCond = phFound
+    and rsiVal[lbR] > rangeUpper
+    and rsiVal[lbR] < ta.valuewhen(phFound, rsiVal[lbR], 1)
+    and high[lbR]   > ta.valuewhen(phFound, high[lbR],   1)
+
+plot(rsiVal, title="RSI", color=color.blue, linewidth=2)
+hline(70, color=color.red,   linestyle=hline.style_dashed)
+hline(30, color=color.green, linestyle=hline.style_dashed)
+hline(50, color=color.gray,  linestyle=hline.style_dotted)
+
+plotshape(bullCond, style=shape.triangleup,   location=location.bottom, color=color.green, offset=-lbR, size=size.small, title="強気ダイバ")
+plotshape(bearCond, style=shape.triangledown, location=location.top,    color=color.red,   offset=-lbR, size=size.small, title="弱気ダイバ")
+```
+
+## ダイバージェンス戦略の実装
+
+```pine
+//@version=5
+strategy("RSIダイバージェンス戦略", overlay=true)
+
+rsiVal = ta.rsi(close, 14)
+lbR    = 5
+lbL    = 5
+
+plFound = not na(ta.pivotlow(rsiVal, lbL, lbR))
+phFound = not na(ta.pivothigh(rsiVal, lbL, lbR))
+
+bullCond = plFound
+    and rsiVal[lbR] < 40
+    and rsiVal[lbR] > ta.valuewhen(plFound, rsiVal[lbR], 1)
+    and low[lbR]    < ta.valuewhen(plFound, low[lbR],    1)
+
+bearCond = phFound
+    and rsiVal[lbR] > 60
+    and rsiVal[lbR] < ta.valuewhen(phFound, rsiVal[lbR], 1)
+    and high[lbR]   > ta.valuewhen(phFound, high[lbR],   1)
+
+atr = ta.atr(14)
+
+if bullCond
+    strategy.entry("買い", strategy.long)
+    strategy.exit("買い決済", from_entry="買い", stop=low[lbR] - atr * 0.5, limit=close[lbR] + atr * 2)
+
+if bearCond
+    strategy.entry("売り", strategy.short)
+    strategy.exit("売り決済", from_entry="売り", stop=high[lbR] + atr * 0.5, limit=close[lbR] - atr * 2)
+```
+
+## まとめ
+
+ダイバージェンスはトレンド転換の早期シグナルとして有効ですが、確認に時間がかかります。`lbR`（右バー数）を大きくするほど確実性が上がりますが、シグナルの遅れも増えます。実際の運用では上位足のトレンド方向と合わせて使うのがおすすめです。

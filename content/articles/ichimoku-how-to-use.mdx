@@ -1,0 +1,94 @@
+---
+title: "一目均衡表の使い方と見方【TradingView設定付き】"
+description: "一目均衡表の5本線（転換線・基準線・先行スパン1・先行スパン2・遅行スパン）の意味と読み方、雲のブレイクアウト戦略をPine Scriptで実装する方法を解説します。"
+category: "indicators"
+tags: ["intermediate"]
+date: "2025-02-25"
+---
+
+## 一目均衡表とは
+
+一目均衡表は日本生まれのテクニカル指標で、トレンド・支持・抵抗・時間の概念を一つのチャートに集約しています。
+
+## 5本線の意味
+
+| 線 | 計算式 | 意味 |
+|----|--------|------|
+| 転換線 | (9期間高値+安値)÷2 | 短期トレンド |
+| 基準線 | (26期間高値+安値)÷2 | 中期トレンド |
+| 先行スパン1 | (転換線+基準線)÷2を26期間先行 | 雲の上辺 |
+| 先行スパン2 | (52期間高値+安値)÷2を26期間先行 | 雲の下辺 |
+| 遅行スパン | 終値を26期間後退 | トレンド確認 |
+
+## 基本的なシグナルの読み方
+
+**買いシグナル（三役好転）**
+1. 転換線が基準線を上抜け
+2. 価格が雲の上にある
+3. 遅行スパンが価格を上抜け
+
+**売りシグナル（三役逆転）**
+1. 転換線が基準線を下抜け
+2. 価格が雲の下にある
+3. 遅行スパンが価格を下抜け
+
+## Pine Scriptで実装
+
+```pine
+//@version=5
+indicator("一目均衡表", overlay=true)
+
+conversionPeriods = input.int(9,  "転換線")
+basePeriods       = input.int(26, "基準線")
+laggingSpan2      = input.int(52, "先行スパン2")
+displacement      = input.int(26, "遅行スパン")
+
+// 各線の計算
+donchian(len) => math.avg(ta.lowest(len), ta.highest(len))
+
+conversion = donchian(conversionPeriods)
+base       = donchian(basePeriods)
+lead1      = math.avg(conversion, base)
+lead2      = donchian(laggingSpan2)
+
+// プロット
+plot(conversion, title="転換線", color=color.new(color.blue, 0),   linewidth=1)
+plot(base,       title="基準線", color=color.new(color.red, 0),    linewidth=2)
+plot(close,      title="遅行スパン", offset=-displacement, color=color.new(color.green, 0))
+
+p1 = plot(lead1, title="先行スパン1", offset=displacement, color=color.new(color.green, 0))
+p2 = plot(lead2, title="先行スパン2", offset=displacement, color=color.new(color.red, 0))
+fill(p1, p2, title="雲", color=lead1 > lead2 ? color.new(color.green, 85) : color.new(color.red, 85))
+```
+
+## 雲のブレイクアウト戦略
+
+```pine
+//@version=5
+strategy("雲ブレイク戦略", overlay=true)
+
+donchian(len) => math.avg(ta.lowest(len), ta.highest(len))
+
+conversion = donchian(9)
+base       = donchian(26)
+lead1      = math.avg(conversion, base)
+lead2      = donchian(52)
+
+// 26期間後の雲
+futureCloud1 = lead1[0]
+futureCloud2 = lead2[0]
+cloudTop    = math.max(futureCloud1, futureCloud2)
+cloudBottom = math.min(futureCloud1, futureCloud2)
+
+// 雲を上抜けで買い
+if ta.crossover(close, cloudTop)
+    strategy.entry("買い", strategy.long)
+
+// 雲を下抜けで売り決済
+if ta.crossunder(close, cloudBottom)
+    strategy.close("買い")
+```
+
+## まとめ
+
+一目均衡表は単体で相場の多くの情報を読み取れる強力な指標です。特に「雲の厚み＝抵抗の強さ」という概念は他のインジケーターにない特徴です。

@@ -1,0 +1,89 @@
+---
+title: "サポート・レジスタンスラインの引き方と活用法"
+description: "水平線（サポート・レジスタンス）の見つけ方・TradingViewでの描き方・ブレイクアウト手法への応用をPine Scriptの自動検出コードとともに解説します。"
+category: "methods"
+tags: ["beginner"]
+date: "2025-03-10"
+---
+
+## サポート・レジスタンスとは
+
+- **サポート（支持線）** — 価格が何度も反発した安値のライン
+- **レジスタンス（抵抗線）** — 価格が何度も跳ね返された高値のライン
+
+価格はこれらのラインで反発しやすく、ブレイクすると大きく動く傾向があります。
+
+## 有効なラインの見つけ方
+
+1. **回数** — 2回以上反発したポイントが有効
+2. **時間軸** — 上位足（日足・4時間足）のラインほど強い
+3. **出来高** — 出来高が多いところで形成されたラインは強い
+4. **ラウンドナンバー** — 150.00・155.00などきりのいい数字
+
+## TradingViewでの描き方
+
+1. 左側ツールバーから「水平線」を選択
+2. 反発した高値・安値にラインを引く
+3. ラインをダブルクリックで色・太さを変更
+
+**ショートカット**
+- `Alt + H` — 水平線を素早く引く
+
+## Pine ScriptでSwing High/Lowを自動検出
+
+```pine
+//@version=5
+indicator("スイングハイロー検出", overlay=true)
+
+leftBars  = input.int(5, "左バー数")
+rightBars = input.int(5, "右バー数")
+
+// ピボット高値・安値を検出
+pivotHigh = ta.pivothigh(high, leftBars, rightBars)
+pivotLow  = ta.pivotlow(low,  leftBars, rightBars)
+
+// ラインを描画
+if not na(pivotHigh)
+    line.new(bar_index[rightBars], pivotHigh, bar_index, pivotHigh,
+         color=color.red, width=1, style=line.style_dashed, extend=line.extend.right)
+
+if not na(pivotLow)
+    line.new(bar_index[rightBars], pivotLow, bar_index, pivotLow,
+         color=color.green, width=1, style=line.style_dashed, extend=line.extend.right)
+
+plotshape(not na(pivotHigh), style=shape.triangledown, location=location.abovebar, color=color.red,   offset=-rightBars)
+plotshape(not na(pivotLow),  style=shape.triangleup,   location=location.belowbar, color=color.green, offset=-rightBars)
+```
+
+## ブレイクアウト戦略
+
+```pine
+//@version=5
+strategy("S/Rブレイクアウト", overlay=true)
+
+leftBars  = input.int(10, "左バー数")
+rightBars = input.int(2,  "右バー数")
+
+pivotHigh = ta.pivothigh(high, leftBars, rightBars)
+pivotLow  = ta.pivotlow(low,  leftBars, rightBars)
+
+var float resistanceLevel = na
+var float supportLevel    = na
+
+if not na(pivotHigh)
+    resistanceLevel := pivotHigh[rightBars]
+if not na(pivotLow)
+    supportLevel := pivotLow[rightBars]
+
+// レジスタンスをブレイクで買い
+if not na(resistanceLevel) and ta.crossover(close, resistanceLevel)
+    strategy.entry("ブレイク買い", strategy.long)
+    strategy.exit("決済", from_entry="ブレイク買い", stop=resistanceLevel * 0.998)
+
+plot(resistanceLevel, color=color.red,   style=plot.style_linebr, linewidth=2)
+plot(supportLevel,    color=color.green, style=plot.style_linebr, linewidth=2)
+```
+
+## まとめ
+
+サポート・レジスタンスは最もシンプルで有効なテクニカル分析の一つです。上位足のラインを優先し、複数回反発したラインだけを使う習慣をつけましょう。

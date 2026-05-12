@@ -1,0 +1,115 @@
+---
+title: "Pine Scriptの配列（array）完全ガイド"
+description: "Pine Scriptの配列（array）の作成・要素の追加・削除・ループ処理・実用的な使い方をコード例とともに解説します。動的なデータ管理に必須の知識です。"
+category: "pine-script"
+tags: ["advanced"]
+date: "2025-03-22"
+---
+
+## 配列とは
+
+Pine Scriptの配列は、複数の値をまとめて管理するためのデータ構造です。動的なデータ管理や複雑な計算に使います。
+
+## 配列の作成
+
+```pine
+//@version=5
+indicator("配列サンプル")
+
+// 空の配列を作成
+var prices = array.new_float(0)
+
+// 初期値ありで作成（サイズ5、全要素0.0で初期化）
+var myArray = array.new_float(5, 0.0)
+
+// 直接初期化
+var labels = array.new_string(3, "")
+```
+
+## 要素の追加・削除
+
+```pine
+//@version=5
+indicator("配列操作", overlay=false)
+
+var prices = array.new_float(0)
+maxSize    = 10
+
+// 末尾に追加
+array.push(prices, close)
+
+// サイズを超えたら先頭を削除
+if array.size(prices) > maxSize
+    array.shift(prices)
+
+// 配列の平均を計算
+avgPrice = array.size(prices) > 0 ? array.avg(prices) : na
+plot(avgPrice, title="動的移動平均", color=color.blue)
+```
+
+## ループ処理
+
+```pine
+//@version=5
+indicator("配列ループ", overlay=false)
+
+length = 5
+var values = array.new_float(length, na)
+
+// 配列を更新
+array.set(values, 0, close)
+for i = length - 1 to 1
+    array.set(values, i, array.get(values, i - 1))
+
+// ループで最大値を探す
+maxVal = array.get(values, 0)
+for i = 1 to length - 1
+    val = array.get(values, i)
+    if not na(val) and val > maxVal
+        maxVal := val
+
+plot(maxVal, color=color.red)
+```
+
+## 実用例：スイングハイの記録
+
+```pine
+//@version=5
+indicator("スイングハイ記録", overlay=true)
+
+var swingHighs = array.new_float(0)
+maxRecords    = 5
+
+pivHigh = ta.pivothigh(high, 5, 5)
+
+if not na(pivHigh)
+    array.push(swingHighs, pivHigh)
+    if array.size(swingHighs) > maxRecords
+        array.shift(swingHighs)
+
+// 記録されたスイングハイの平均
+if array.size(swingHighs) > 0
+    avgSwing = array.avg(swingHighs)
+    plot(avgSwing, title="スイングハイ平均", color=color.red, linewidth=2, style=plot.style_linebr)
+```
+
+## よく使う配列関数
+
+| 関数 | 説明 |
+|------|------|
+| `array.new_float(size, val)` | float配列作成 |
+| `array.push(id, val)` | 末尾に追加 |
+| `array.pop(id)` | 末尾を削除して返す |
+| `array.shift(id)` | 先頭を削除して返す |
+| `array.unshift(id, val)` | 先頭に追加 |
+| `array.get(id, i)` | i番目の要素を取得 |
+| `array.set(id, i, val)` | i番目に値をセット |
+| `array.size(id)` | サイズを返す |
+| `array.avg(id)` | 平均を返す |
+| `array.max(id)` | 最大値を返す |
+| `array.min(id)` | 最小値を返す |
+| `array.sort(id)` | 昇順ソート |
+
+## まとめ
+
+配列はPine Scriptの中でも高度な機能ですが、複数のスイングポイントを記録したり、動的なデータ管理が必要な場合に欠かせません。まずは`array.push()`と`array.shift()`で動的キューを作る使い方から試してみましょう。

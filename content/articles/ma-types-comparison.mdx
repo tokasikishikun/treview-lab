@@ -1,0 +1,91 @@
+---
+title: "SMA・EMA・WMAの違いと使い分け【移動平均線比較】"
+description: "単純移動平均（SMA）・指数平滑移動平均（EMA）・加重移動平均（WMA）の計算方法・特徴・使い分けをPine Scriptのコードと合わせて比較解説します。"
+category: "indicators"
+tags: ["beginner"]
+date: "2025-03-15"
+---
+
+## 3種類の移動平均線
+
+| 種類 | 英名 | 特徴 |
+|------|------|------|
+| SMA | Simple Moving Average | シンプル・遅い |
+| EMA | Exponential Moving Average | 直近を重視・速い |
+| WMA | Weighted Moving Average | 線形加重・EMAとSMAの中間 |
+
+## 計算方法の違い
+
+**SMA（単純移動平均）**
+全期間を均等に平均するだけです。
+```
+SMA = (P1 + P2 + ... + Pn) / n
+```
+
+**EMA（指数平滑移動平均）**
+直近データに大きな重みをかけます。
+```
+EMA = 前日EMA + 2/(n+1) × (現在値 - 前日EMA)
+```
+
+**WMA（加重移動平均）**
+新しいデータほど線形に大きい重みをかけます。
+```
+WMA = (P1×1 + P2×2 + ... + Pn×n) / (1+2+...+n)
+```
+
+## Pine Scriptで3本比較
+
+```pine
+//@version=5
+indicator("MA比較", overlay=true)
+
+length = input.int(20, "期間")
+
+sma = ta.sma(close, length)
+ema = ta.ema(close, length)
+wma = ta.wma(close, length)
+
+plot(sma, title="SMA", color=color.blue,   linewidth=2)
+plot(ema, title="EMA", color=color.orange, linewidth=2)
+plot(wma, title="WMA", color=color.green,  linewidth=2)
+```
+
+## どれを使うべきか
+
+**SMAが向いている場面**
+- 週足・月足などの長期チャート
+- サポート・レジスタンスとして使うとき
+- ノイズを排除してなめらかなトレンドを見たいとき
+
+**EMAが向いている場面**
+- デイトレード・スキャルピング
+- トレンドへの追随スピードが重要なとき
+- MACD（EMAベース）と組み合わせるとき
+
+**WMAが向いている場面**
+- EMAよりさらに速い反応が欲しいとき
+- SMAとEMAの中間の性質が必要なとき
+
+## MAタイプを切り替えられるインジケーター
+
+```pine
+//@version=5
+indicator("MAタイプ切替", overlay=true)
+
+length = input.int(20, "期間")
+maType = input.string("EMA", "MAタイプ", options=["SMA", "EMA", "WMA", "VWMA", "HMA"])
+
+ma = switch maType
+    "SMA"  => ta.sma(close, length)
+    "EMA"  => ta.ema(close, length)
+    "WMA"  => ta.wma(close, length)
+    "VWMA" => ta.vwma(close, length)
+    "HMA"  => ta.hma(close, length)
+
+plot(ma, title="MA", color=color.blue, linewidth=2)
+```
+
+## まとめ
+
+一般的にはEMAが最も多く使われています。素早くトレンドを捉えながらも、SMAほど遅くない点がバランスよく、MACDなど多くのインジケーターもEMAベースで計算されています。

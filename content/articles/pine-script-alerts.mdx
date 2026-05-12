@@ -1,0 +1,88 @@
+---
+title: "Pine Scriptでアラートを作成する【alertcondition完全解説】"
+description: "Pine ScriptのalertconditionとalertでTradingViewのアラートを実装する方法を解説。複数条件・Webhookメッセージ・動的メッセージの書き方まで紹介します。"
+category: "pine-script"
+tags: ["intermediate"]
+date: "2025-02-22"
+---
+
+## alertcondition の基本
+
+`alertcondition()`でアラートの条件を定義すると、TradingViewのアラート設定画面から選択できるようになります。
+
+```pine
+//@version=5
+indicator("アラートサンプル", overlay=true)
+
+ma20 = ta.ema(close, 20)
+ma50 = ta.ema(close, 50)
+
+goldenCross = ta.crossover(ma20, ma50)
+deadCross   = ta.crossunder(ma20, ma50)
+
+plot(ma20, color=color.blue)
+plot(ma50, color=color.orange)
+
+alertcondition(goldenCross, title="ゴールデンクロス",
+     message="{{ticker}} {{interval}} ゴールデンクロス発生 価格:{{close}}")
+alertcondition(deadCross, title="デッドクロス",
+     message="{{ticker}} {{interval}} デッドクロス発生 価格:{{close}}")
+```
+
+## 使えるプレースホルダー
+
+| プレースホルダー | 内容 |
+|----------------|------|
+| `{{ticker}}` | 銘柄コード（例：USDJPY） |
+| `{{interval}}` | 時間足（例：60） |
+| `{{close}}` | 終値 |
+| `{{open}}` | 始値 |
+| `{{high}}` | 高値 |
+| `{{low}}` | 安値 |
+| `{{volume}}` | 出来高 |
+| `{{time}}` | 発生時刻 |
+| `{{exchange}}` | 取引所名 |
+
+## alert()関数（スクリプト内から直接発火）
+
+`alertcondition`と違い、`alert()`はスクリプト内で直接アラートを発火させます。
+
+```pine
+//@version=5
+strategy("alert()サンプル", overlay=true)
+
+fastMA = ta.ema(close, 20)
+slowMA = ta.ema(close, 50)
+
+if ta.crossover(fastMA, slowMA)
+    strategy.entry("買い", strategy.long)
+    alert("買いエントリー: " + syminfo.ticker + " 価格=" + str.tostring(close), alert.freq_once_per_bar)
+
+if ta.crossunder(fastMA, slowMA)
+    strategy.close("買い")
+    alert("決済: " + syminfo.ticker + " 価格=" + str.tostring(close), alert.freq_once_per_bar)
+```
+
+## Webhook用JSONメッセージ
+
+Discord・Slack・外部ツールへ送る場合はJSON形式で書きます。
+
+```pine
+alertcondition(goldenCross,
+     title="GC Webhook",
+     message='{"ticker":"{{ticker}}","action":"buy","price":"{{close}}","timeframe":"{{interval}}"}')
+```
+
+## alert.freq の設定
+
+| 設定値 | 発火タイミング |
+|--------|--------------|
+| `alert.freq_once_per_bar` | バーごとに1回 |
+| `alert.freq_once_per_bar_close` | バー確定時のみ |
+| `alert.freq_all` | 条件が真の間ずっと |
+
+## まとめ
+
+- `alertcondition()` → アラート設定画面で選択する方式
+- `alert()` → スクリプト内で直接発火する方式
+- バー確定時のみ発火させたい場合は `alert.freq_once_per_bar_close` を使う

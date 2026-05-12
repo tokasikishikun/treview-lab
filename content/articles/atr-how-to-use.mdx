@@ -1,0 +1,113 @@
+---
+title: "ATR（Average True Range）の使い方と活用術"
+description: "ATRの計算方法・ボラティリティの読み方・ストップロスへの応用・ポジションサイジングへの活用をPine Scriptのコードとともに解説します。"
+category: "indicators"
+tags: ["intermediate"]
+date: "2025-03-05"
+---
+
+## ATRとは
+
+ATR（Average True Range）は、一定期間の価格変動幅の平均値を表すインジケーターです。方向性は示さず、「どれだけ動いているか」だけを数値化します。
+
+## True Rangeの計算
+
+True Range = 以下の3つの最大値
+1. 当日高値 − 当日安値
+2. |当日高値 − 前日終値|
+3. |当日安値 − 前日終値|
+
+ATRはこのTrue RangeのN期間移動平均です。
+
+## Pine Scriptで実装
+
+```pine
+//@version=5
+indicator("ATR カスタム", overlay=false)
+
+length = input.int(14, "ATR期間")
+atr    = ta.atr(length)
+
+plot(atr, title="ATR", color=color.blue, linewidth=2)
+
+// ATRの移動平均（ボラティリティの変化を把握）
+atrMA = ta.sma(atr, 20)
+plot(atrMA, title="ATR MA", color=color.orange, linewidth=1)
+
+// 現在ATRが平均より高い（高ボラティリティ）かを背景色で表示
+bgcolor(atr > atrMA * 1.2 ? color.new(color.red, 90) : na, title="高ボラティリティ")
+```
+
+## ATRを使ったストップロス
+
+ATRベースのSLはボラティリティに自動で適応するため実践的です。
+
+```pine
+//@version=5
+strategy("ATRストップロス", overlay=true)
+
+atr      = ta.atr(14)
+slBuffer = input.float(1.5, "ATR倍率（SL）")
+
+fastMA = ta.ema(close, 20)
+slowMA = ta.ema(close, 50)
+
+if ta.crossover(fastMA, slowMA)
+    strategy.entry("買い", strategy.long)
+    strategy.exit("決済", from_entry="買い",
+         stop = strategy.position_avg_price - atr * slBuffer)
+
+plot(fastMA, color=color.blue)
+plot(slowMA, color=color.orange)
+
+// SLラインの表示
+slLine = strategy.position_size > 0 ? strategy.position_avg_price - atr * slBuffer : na
+plot(slLine, color=color.red, style=plot.style_linebr, linewidth=2, title="SL")
+```
+
+## ATRを使ったポジションサイジング
+
+リスク額を固定してポジションサイズを計算できます。
+
+```pine
+//@version=5
+indicator("ATRポジションサイジング", overlay=false)
+
+capital    = input.float(1000000, "口座残高（円）")
+riskPct    = input.float(1.0,     "リスク割合（%）")
+atrMult    = input.float(1.5,     "ATR倍率（SL）")
+lotSize    = input.float(100000,  "1ロット（通貨）")
+
+atr        = ta.atr(14)
+riskAmount = capital * (riskPct / 100)
+slPips     = atr * atrMult
+lots       = riskAmount / (slPips * lotSize / close)
+
+plot(lots, title="推奨ロット数", color=color.blue)
+```
+
+## ボラティリティフィルターとしての活用
+
+```pine
+//@version=5
+indicator("ATRボラフィルター", overlay=true)
+
+atr      = ta.atr(14)
+atrMA    = ta.sma(atr, 50)
+isHighVol = atr > atrMA * 1.3
+isLowVol  = atr < atrMA * 0.7
+
+// 高ボラ時・低ボラ時を背景色で表示
+bgcolor(isHighVol ? color.new(color.red,    92) : na)
+bgcolor(isLowVol  ? color.new(color.yellow, 92) : na)
+```
+
+## まとめ
+
+ATRの主な用途は3つです。
+
+1. **SLの設定** — ATR × 倍率でボラティリティに適応したSL
+2. **ポジションサイジング** — リスク額からロット数を算出
+3. **ボラティリティフィルター** — エントリー可否の判断
+
+特にSLへの応用は多くのトレーダーが実践しており、固定pipsのSLより優れています。

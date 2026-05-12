@@ -1,0 +1,97 @@
+---
+title: "Pine Scriptでストップロスとテイクプロフィットを設定する"
+description: "strategy.exit()を使ったストップロス・テイクプロフィットの実装方法を解説。固定pips・ATRベース・パーセンテージベースの3パターンを紹介します。"
+category: "pine-script"
+tags: ["intermediate"]
+date: "2025-02-18"
+---
+
+## ストップロス・テイクプロフィットの基本
+
+Pine Scriptのストラテジーでは`strategy.exit()`を使ってSL/TPを設定します。
+
+```pine
+//@version=5
+strategy("SL/TP サンプル", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=10)
+
+fastMA = ta.ema(close, 20)
+slowMA = ta.ema(close, 50)
+
+if ta.crossover(fastMA, slowMA)
+    strategy.entry("買い", strategy.long)
+
+// 固定pipsでSL/TP設定（ドル円想定：1pip = 0.01）
+strategy.exit("決済", from_entry="買い", loss=100, profit=200)
+
+plot(fastMA, color=color.blue)
+plot(slowMA, color=color.orange)
+```
+
+## ATRベースのSL/TP（推奨）
+
+固定pipsより市場のボラティリティに合わせたATRベースが実践的です。
+
+```pine
+//@version=5
+strategy("ATRベースSL/TP", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=10)
+
+fastMA = ta.ema(close, 20)
+slowMA = ta.ema(close, 50)
+atr    = ta.atr(14)
+
+slMult = input.float(1.5, "SL ATR倍率")
+tpMult = input.float(3.0, "TP ATR倍率")
+
+if ta.crossover(fastMA, slowMA)
+    strategy.entry("買い", strategy.long)
+    strategy.exit("決済", from_entry="買い",
+         stop   = strategy.position_avg_price - atr * slMult,
+         limit  = strategy.position_avg_price + atr * tpMult)
+
+plot(fastMA, color=color.blue)
+plot(slowMA, color=color.orange)
+```
+
+## パーセンテージベース
+
+```pine
+//@version=5
+strategy("パーセンテージSL/TP", overlay=true)
+
+if ta.crossover(ta.ema(close, 20), ta.ema(close, 50))
+    strategy.entry("買い", strategy.long)
+    strategy.exit("決済", from_entry="買い",
+         stop  = strategy.position_avg_price * 0.98,  // -2%でSL
+         limit = strategy.position_avg_price * 1.04)  // +4%でTP
+
+plot(ta.ema(close, 20), color=color.blue)
+plot(ta.ema(close, 50), color=color.orange)
+```
+
+## SL/TPラインを描画する
+
+```pine
+//@version=5
+strategy("SL/TPライン表示", overlay=true)
+
+atr = ta.atr(14)
+
+if ta.crossover(ta.ema(close, 20), ta.ema(close, 50))
+    strategy.entry("買い", strategy.long)
+
+slPrice = strategy.position_avg_price - atr * 1.5
+tpPrice = strategy.position_avg_price + atr * 3.0
+
+plot(strategy.position_size > 0 ? slPrice : na, color=color.red,   style=plot.style_linebr, linewidth=2, title="SL")
+plot(strategy.position_size > 0 ? tpPrice : na, color=color.green, style=plot.style_linebr, linewidth=2, title="TP")
+```
+
+## まとめ
+
+| 方法 | 特徴 | 向いている場面 |
+|------|------|--------------|
+| 固定pips | シンプル | 特定通貨ペア専用 |
+| ATRベース | ボラティリティ対応 | 汎用・推奨 |
+| パーセンテージ | 資産規模に連動 | 株・仮想通貨 |
+
+ATRベースが最も汎用性が高く、相場環境に自動で適応するためおすすめです。

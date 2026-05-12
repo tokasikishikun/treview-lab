@@ -1,0 +1,111 @@
+---
+title: "ブレイクアウト手法をPine Scriptで実装する"
+description: "レンジブレイクアウト・高値安値ブレイクアウト手法の概念とPine Scriptによる実装を解説。フォルスブレイク（ダマシ）フィルターの追加方法も説明します。"
+category: "methods"
+tags: ["intermediate"]
+date: "2025-03-25"
+---
+
+## ブレイクアウトとは
+
+一定期間の高値（レジスタンス）または安値（サポート）を価格が突き抜けたときにエントリーする手法です。
+
+## ドンチャンチャンネルブレイクアウト
+
+N期間の高値・安値をブレイクしたときにエントリーします。
+
+```pine
+//@version=5
+strategy("ドンチャンブレイクアウト", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=10)
+
+length = input.int(20, "ブレイク判定期間")
+
+upperBreak = ta.highest(high, length)[1]  // 前バーまでのN期間高値
+lowerBreak = ta.lowest(low,  length)[1]  // 前バーまでのN期間安値
+
+// 高値ブレイクで買い
+if ta.crossover(high, upperBreak)
+    strategy.entry("買い", strategy.long)
+
+// 安値ブレイクで決済
+if ta.crossunder(low, lowerBreak)
+    strategy.close("買い")
+
+plot(upperBreak, title="上限", color=color.red,   style=plot.style_linebr)
+plot(lowerBreak, title="下限", color=color.green, style=plot.style_linebr)
+```
+
+## ATRフィルターでダマシを減らす
+
+ブレイク幅がATRの一定倍率以上のときだけエントリーします。
+
+```pine
+//@version=5
+strategy("ATRフィルター付きブレイクアウト", overlay=true)
+
+length    = input.int(20,  "ブレイク期間")
+atrMult   = input.float(0.3, "ATR倍率（最小ブレイク幅）")
+
+upperBreak = ta.highest(high, length)[1]
+lowerBreak = ta.lowest(low,  length)[1]
+atr        = ta.atr(14)
+
+// ブレイク幅がATR×倍率以上のときのみ有効
+bullBreak = high > upperBreak and (high - upperBreak) > atr * atrMult
+bearBreak = low  < lowerBreak and (lowerBreak - low)  > atr * atrMult
+
+if bullBreak
+    strategy.entry("買い", strategy.long)
+    strategy.exit("決済", from_entry="買い", stop=lowerBreak, limit=close + atr * 2)
+
+if bearBreak
+    strategy.entry("売り", strategy.short)
+    strategy.exit("決済", from_entry="売り", stop=upperBreak, limit=close - atr * 2)
+
+plot(upperBreak, color=color.red,   style=plot.style_linebr)
+plot(lowerBreak, color=color.green, style=plot.style_linebr)
+```
+
+## ボラティリティ収縮後のブレイクアウト
+
+BBWスクイーズ後のブレイクは特に有効です。
+
+```pine
+//@version=5
+strategy("スクイーズブレイクアウト", overlay=true)
+
+bbLength = input.int(20, "BB期間")
+bbMult   = input.float(2.0, "BB倍率")
+dcLength = input.int(20, "ドンチャン期間")
+
+basis = ta.sma(close, bbLength)
+dev   = ta.stdev(close, bbLength) * bbMult
+upper = basis + dev
+lower = basis - dev
+bbw   = (upper - lower) / basis
+
+// BBWが直近20本の最低値＝スクイーズ状態
+isSqueezing = bbw == ta.lowest(bbw, 20)
+
+dcHigh = ta.highest(high, dcLength)[1]
+dcLow  = ta.lowest(low,  dcLength)[1]
+
+// スクイーズ明けのブレイクアウト
+if not isSqueezing and ta.crossover(high, dcHigh)
+    strategy.entry("買い", strategy.long)
+
+if ta.crossunder(low, dcLow)
+    strategy.close("買い")
+
+plot(dcHigh, color=color.red,   style=plot.style_linebr)
+plot(dcLow,  color=color.green, style=plot.style_linebr)
+bgcolor(isSqueezing ? color.new(color.yellow, 88) : na)
+```
+
+## まとめ
+
+ブレイクアウト戦略のポイントは3つです。
+
+1. **エントリーは前バー確定後の高値・安値を使う**（`[1]`で参照）
+2. **ATRフィルターでダマシを減らす**
+3. **スクイーズ後のブレイクを狙う**と成功率が上がる

@@ -1,0 +1,99 @@
+---
+title: "マルチタイムフレーム分析の基本とTradingViewでの実践"
+description: "上位足・下位足を組み合わせたマルチタイムフレーム分析の考え方と、Pine ScriptのreqeustSecurityを使った上位足データの取得方法を解説します。"
+category: "methods"
+tags: ["intermediate"]
+date: "2025-03-18"
+---
+
+## マルチタイムフレーム分析とは
+
+複数の時間足を組み合わせてトレードの精度を上げる手法です。
+
+```
+上位足でトレンド方向を確認
+    ↓
+中位足でエントリーポイントを絞る
+    ↓
+下位足でエントリータイミングを計る
+```
+
+## 代表的な組み合わせ
+
+| スタイル | 上位足 | エントリー足 |
+|---------|--------|------------|
+| スイング | 日足 | 4時間足・1時間足 |
+| デイトレ | 4時間足 | 1時間足・15分足 |
+| スキャルプ | 1時間足 | 15分足・5分足 |
+
+## TradingViewでの確認方法
+
+画面を分割して複数の時間足を表示できます。
+
+1. チャート右上の「レイアウト」アイコンをクリック
+2. 2画面・4画面分割を選択
+3. 各チャートで異なる時間足を設定
+
+## Pine Scriptで上位足データを取得
+
+`request.security()`を使うと、現在の時間足より上位足のデータを取得できます。
+
+```pine
+//@version=5
+indicator("マルチTF MA", overlay=true)
+
+htf = input.timeframe("240", "上位足（分）")  // 240 = 4時間足
+
+// 上位足の20EMAを取得
+htfMA = request.security(syminfo.tickerid, htf, ta.ema(close, 20))
+
+// 現在足の20EMA
+ltfMA = ta.ema(close, 20)
+
+plot(htfMA, title="上位足MA", color=color.red,  linewidth=3)
+plot(ltfMA, title="現在足MA", color=color.blue, linewidth=1)
+
+// 上位足MAの上にいるかで背景色を変える
+bgcolor(close > htfMA ? color.new(color.green, 95) : color.new(color.red, 95))
+```
+
+## 上位足トレンドフィルター付き戦略
+
+```pine
+//@version=5
+strategy("MTF戦略", overlay=true)
+
+htf = input.timeframe("240", "上位足")
+
+// 上位足のトレンド判定（EMA20 vs EMA50）
+htfFast = request.security(syminfo.tickerid, htf, ta.ema(close, 20))
+htfSlow = request.security(syminfo.tickerid, htf, ta.ema(close, 50))
+htfBull = htfFast > htfSlow  // 上位足が上昇トレンド
+
+// 現在足のエントリー条件
+ltfFast = ta.ema(close, 20)
+ltfSlow = ta.ema(close, 50)
+
+goldenCross = ta.crossover(ltfFast, ltfSlow)
+deadCross   = ta.crossunder(ltfFast, ltfSlow)
+
+// 上位足が上昇トレンドのときのみ買いエントリー
+if goldenCross and htfBull
+    strategy.entry("買い", strategy.long)
+
+if deadCross
+    strategy.close("買い")
+
+plot(ltfFast, color=color.blue)
+plot(ltfSlow, color=color.orange)
+bgcolor(htfBull ? color.new(color.green, 95) : color.new(color.red, 95))
+```
+
+## 注意点
+
+- `request.security()`はバーが確定していない最新バーを参照するため、`barmerge.lookahead_on`の使用には注意が必要
+- 上位足が週足・月足の場合、データ数が少なくなる
+
+## まとめ
+
+マルチタイムフレーム分析で最も重要なのは「**上位足のトレンドに逆らわない**」ことです。上位足が下降トレンドのとき下位足で買いを狙っても勝率は下がります。Pine Scriptの`request.security()`を使えばこのフィルターを自動化できます。

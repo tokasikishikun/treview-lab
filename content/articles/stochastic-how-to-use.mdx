@@ -1,0 +1,96 @@
+---
+title: "ストキャスティクスの使い方【TradingView・Pine Script】"
+description: "ストキャスティクス（Stochastic）の%K・%Dの見方、買われすぎ・売られすぎのシグナル、RSIとの使い分けをTradingViewとPine Scriptで解説します。"
+category: "indicators"
+tags: ["beginner"]
+date: "2025-03-01"
+---
+
+## ストキャスティクスとは
+
+ストキャスティクスは、一定期間の高値・安値の範囲の中で現在の価格がどの位置にあるかを0〜100で表すオシレーターです。
+
+## %K と %D の違い
+
+| ライン | 説明 |
+|--------|------|
+| %K | メインライン（速い） |
+| %D | %Kの移動平均（遅い・シグナル） |
+
+## 基本的な見方
+
+| 値 | 意味 |
+|----|------|
+| 80以上 | 買われすぎ |
+| 20以下 | 売られすぎ |
+
+%Kが%Dを上抜けで買い、下抜けで売りがシグナルです。
+
+## Pine Scriptで実装
+
+```pine
+//@version=5
+indicator("ストキャスティクス カスタム", overlay=false)
+
+kPeriod = input.int(14, "%K期間")
+dPeriod = input.int(3,  "%D期間")
+smooth  = input.int(3,  "スムージング")
+
+kRaw = ta.stoch(close, high, low, kPeriod)
+k    = ta.sma(kRaw, smooth)
+d    = ta.sma(k, dPeriod)
+
+// 買われすぎ・売られすぎゾーン
+hline(80, "買われすぎ", color=color.red,   linestyle=hline.style_dashed)
+hline(20, "売られすぎ", color=color.green, linestyle=hline.style_dashed)
+hline(50, "中立",       color=color.gray,  linestyle=hline.style_dotted)
+
+// クロスの色
+crossUp   = ta.crossover(k, d)
+crossDown = ta.crossunder(k, d)
+
+plot(k, title="%K", color=color.blue,   linewidth=2)
+plot(d, title="%D", color=color.orange, linewidth=1)
+
+plotshape(crossUp   and k < 20, style=shape.triangleup,   location=location.bottom, color=color.green, size=size.small)
+plotshape(crossDown and k > 80, style=shape.triangledown, location=location.top,    color=color.red,   size=size.small)
+```
+
+## ストキャスティクス vs RSI
+
+| 特徴 | ストキャスティクス | RSI |
+|------|-----------------|-----|
+| 反応速度 | 速い | 遅い |
+| だまし | 多め | 少なめ |
+| 向いている相場 | レンジ | トレンド |
+| 組み合わせ | RSIと併用 | ADXと併用 |
+
+## フィルター付き実装
+
+```pine
+//@version=5
+indicator("ストキャスティクス + ADXフィルター", overlay=false)
+
+kRaw = ta.stoch(close, high, low, 14)
+k    = ta.sma(kRaw, 3)
+d    = ta.sma(k, 3)
+
+[_, _, adxVal] = ta.dmi(14, 14)
+isRange = adxVal < 25  // レンジ相場のみシグナル有効
+
+hline(80, color=color.red,   linestyle=hline.style_dashed)
+hline(20, color=color.green, linestyle=hline.style_dashed)
+
+plot(k, color=color.blue)
+plot(d, color=color.orange)
+
+// レンジ相場のみシグナル表示
+plotshape(ta.crossover(k, d)  and k < 20 and isRange, style=shape.triangleup,   location=location.bottom, color=color.green)
+plotshape(ta.crossunder(k, d) and k > 80 and isRange, style=shape.triangledown, location=location.top,    color=color.red)
+
+bgcolor(not isRange ? color.new(color.blue, 95) : na, title="トレンド相場")
+```
+
+## まとめ
+
+ストキャスティクスはレンジ相場で特に威力を発揮します。ADXと組み合わせてレンジ相場のときだけシグナルを使うのが実践的な活用法です。

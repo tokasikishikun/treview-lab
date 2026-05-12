@@ -1,0 +1,112 @@
+---
+title: "Pine Script input関数の使い方【パラメータを可変にする】"
+description: "Pine Scriptのinput関数を使ってインジケーターのパラメータをチャート上から変更できるようにする方法を解説。input.int・input.float・input.bool・input.sourceなど全種類を紹介します。"
+category: "pine-script"
+tags: ["beginner"]
+date: "2025-02-20"
+---
+
+## input関数とは
+
+`input`関数を使うと、スクリプトのパラメータをコードを書き換えずにチャートの設定画面から変更できるようになります。
+
+## input.int / input.float
+
+```pine
+//@version=5
+indicator("inputサンプル", overlay=false)
+
+// 整数入力
+length = input.int(14, title="期間", minval=1, maxval=200)
+
+// 小数入力
+mult = input.float(2.0, title="倍率", minval=0.1, maxval=10.0, step=0.1)
+
+rsiVal = ta.rsi(close, length)
+plot(rsiVal)
+```
+
+## input.bool（ON/OFFスイッチ）
+
+```pine
+//@version=5
+indicator("bool inputサンプル", overlay=true)
+
+showMA   = input.bool(true,  title="MAを表示")
+showBand = input.bool(false, title="バンドを表示")
+
+ma = ta.sma(close, 20)
+
+plot(showMA ? ma : na, color=color.blue, title="MA")
+
+upper = ma + ta.stdev(close, 20) * 2
+lower = ma - ta.stdev(close, 20) * 2
+plot(showBand ? upper : na, color=color.gray)
+plot(showBand ? lower : na, color=color.gray)
+```
+
+## input.source（価格ソースの選択）
+
+```pine
+//@version=5
+indicator("source inputサンプル", overlay=false)
+
+// close/open/high/low/hl2/hlc3などを選択可能
+src    = input.source(close, title="ソース")
+length = input.int(14, title="期間")
+
+plot(ta.rsi(src, length))
+```
+
+## input.color（色の選択）
+
+```pine
+//@version=5
+indicator("color inputサンプル", overlay=true)
+
+maColor = input.color(color.blue, title="MAの色")
+ma = ta.sma(close, 20)
+plot(ma, color=maColor, linewidth=2)
+```
+
+## input.string（ドロップダウン選択）
+
+```pine
+//@version=5
+indicator("string inputサンプル", overlay=false)
+
+maType = input.string("EMA", title="MAタイプ", options=["SMA", "EMA", "WMA"])
+
+ma = switch maType
+    "SMA" => ta.sma(close, 20)
+    "EMA" => ta.ema(close, 20)
+    "WMA" => ta.wma(close, 20)
+
+plot(ma)
+```
+
+## input.timeframe（時間足の選択）
+
+```pine
+//@version=5
+indicator("timeframe inputサンプル", overlay=true)
+
+tf  = input.timeframe("D", title="参照時間足")
+src = request.security(syminfo.tickerid, tf, close)
+
+plot(src, color=color.red, title="上位足終値")
+```
+
+## まとめ
+
+| 関数 | 用途 |
+|------|------|
+| `input.int` | 整数パラメータ |
+| `input.float` | 小数パラメータ |
+| `input.bool` | ON/OFFスイッチ |
+| `input.source` | 価格ソース選択 |
+| `input.color` | 色の選択 |
+| `input.string` | ドロップダウン |
+| `input.timeframe` | 時間足選択 |
+
+inputを活用することで、1つのスクリプトをさまざまな条件でテストできます。
