@@ -56,7 +56,7 @@ export default function TradingViewChart({
         theme: "light",
         style: "1",
         locale: "ja",
-        studies,
+        studies: studies.map((s) => ({ id: s })),
         hide_side_toolbar: true,
         allow_symbol_change: true,
         save_image: false,
