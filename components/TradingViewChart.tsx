@@ -22,26 +22,28 @@ export default function TradingViewChart({
   symbol = "FX:USDJPY",
   interval = "60",
   studies = [],
-  height = 550,
+  height = 600,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const container = containerRef.current;
-    container.innerHTML = `<div class="tradingview-widget-container__widget" style="height:${height}px;width:100%"></div>`;
+    container.innerHTML = `<div class="tradingview-widget-container__widget" style="height:${height - 32}px;width:100%"></div><div class="tradingview-widget-copyright" style="font-size:11px;line-height:32px;text-align:center;color:#9db2bd"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank" style="color:#9db2bd;text-decoration:none">Track all markets on TradingView</a></div>`;
 
     const config = {
-      autosize: true,
+      width: "100%",
+      height,
       symbol,
       interval,
       timezone: "Asia/Tokyo",
       theme: "light",
       style: "1",
       locale: "ja",
-      enable_publishing: false,
+      withdateranges: true,
+      hide_side_toolbar: false,
       allow_symbol_change: true,
-      hide_side_toolbar: true,
+      enable_publishing: false,
       save_image: false,
       studies,
       support_host: "https://www.tradingview.com",
@@ -52,7 +54,7 @@ export default function TradingViewChart({
     script.src =
       "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.async = true;
-    script.innerHTML = JSON.stringify(config);
+    script.text = JSON.stringify(config);
     container.appendChild(script);
 
     return () => {
@@ -81,7 +83,7 @@ export default function TradingViewChart({
       <div
         ref={containerRef}
         className="tradingview-widget-container"
-        style={{ height }}
+        style={{ height, width: "100%" }}
       />
     </div>
   );
