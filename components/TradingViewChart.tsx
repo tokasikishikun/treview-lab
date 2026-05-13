@@ -7,6 +7,7 @@ type Props = {
   interval?: string;
   studies?: string[];
   height?: number;
+  theme?: "light" | "dark";
 };
 
 const intervalLabel = (interval: string) => {
@@ -15,6 +16,7 @@ const intervalLabel = (interval: string) => {
   if (interval === "60") return "1時間足";
   if (interval === "240") return "4時間足";
   if (interval === "15") return "15分足";
+  if (interval === "5") return "5分足";
   return `${interval}分足`;
 };
 
@@ -23,6 +25,7 @@ export default function TradingViewChart({
   interval = "60",
   studies = [],
   height = 600,
+  theme = "dark",
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +40,7 @@ export default function TradingViewChart({
       symbol,
       interval,
       timezone: "Asia/Tokyo",
-      theme: "light",
+      theme,
       style: "1",
       locale: "ja",
       withdateranges: true,
@@ -60,20 +63,30 @@ export default function TradingViewChart({
     return () => {
       container.innerHTML = "";
     };
-  }, [symbol, interval, height, studies]);
+  }, [symbol, interval, height, theme, studies]);
+
+  const isDark = theme === "dark";
 
   return (
-    <div className="my-8 rounded-xl overflow-hidden border border-slate-200 shadow-sm not-prose">
-      <div className="bg-slate-800 px-4 py-2.5 text-xs text-slate-300 flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-green-400 inline-block animate-pulse"></span>
+    <div
+      className={`rounded-xl overflow-hidden border shadow-sm not-prose ${
+        isDark ? "border-slate-700" : "border-slate-200"
+      }`}
+    >
+      <div
+        className={`px-4 py-2.5 text-xs flex items-center gap-2 ${
+          isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"
+        }`}
+      >
+        <span className="w-2 h-2 rounded-full bg-green-400 inline-block animate-pulse" />
         <span>ライブチャート</span>
-        <span className="text-slate-500">—</span>
-        <span>{symbol}</span>
-        <span className="text-slate-500">·</span>
+        <span className={isDark ? "text-slate-500" : "text-slate-400"}>—</span>
+        <span className="font-medium">{symbol}</span>
+        <span className={isDark ? "text-slate-500" : "text-slate-400"}>·</span>
         <span>{intervalLabel(interval)}</span>
         {studies.length > 0 && (
           <>
-            <span className="text-slate-500">·</span>
+            <span className={isDark ? "text-slate-500" : "text-slate-400"}>·</span>
             <span className="text-blue-400">
               {studies.map((s) => s.split("@")[0]).join(" / ")}
             </span>

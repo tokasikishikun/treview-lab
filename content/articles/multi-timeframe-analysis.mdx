@@ -34,6 +34,16 @@ date: "2025-03-18"
 2. 2画面・4画面分割を選択
 3. 各チャートで異なる時間足を設定
 
+**4時間足（上位足）でトレンドを確認**
+
+<TradingViewChart symbol="FX:USDJPY" interval="240" studies={["MAExp@tv-basicstudies"]} height={380} theme="light" />
+
+**1時間足（エントリー足）でタイミングを計る**
+
+<TradingViewChart symbol="FX:USDJPY" interval="60" studies={["MAExp@tv-basicstudies"]} height={380} theme="light" />
+
+> 上の4時間足でEMAの向きを確認し、下の1時間足で同方向のエントリーポイントを探すのがマルチタイムフレーム分析の基本です。
+
 ## Pine Scriptで上位足データを取得
 
 `request.security()`を使うと、現在の時間足より上位足のデータを取得できます。

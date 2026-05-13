@@ -1,30 +1,22 @@
 import type { Metadata } from "next";
-import ArticleCard from "@/components/ArticleCard";
+import ArticleFilter from "@/components/ArticleFilter";
 import { getAllArticles } from "@/lib/articles";
 
 export const metadata: Metadata = {
   title: "記事一覧",
-  description: "TradingView・Pine Script・テクニカル分析に関する記事の一覧です。",
+  description: "TradingView・Pine Script・テクニカル分析に関する記事の一覧です。カテゴリーや難易度で絞り込めます。",
 };
 
 export default function ArticlesPage() {
   const articles = getAllArticles();
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12">
-      <h1 className="text-2xl font-bold text-slate-900 mb-8">記事一覧</h1>
-      {articles.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {articles.map((article) => (
-            <ArticleCard key={article.slug} {...article} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-20 text-slate-400">
-          <p className="text-lg mb-2">記事を準備中です</p>
-          <p className="text-sm">もうしばらくお待ちください</p>
-        </div>
-      )}
+    <div className="max-w-5xl mx-auto px-4 py-10">
+      <div className="mb-7">
+        <h1 className="text-2xl font-bold text-slate-900">記事一覧</h1>
+        <p className="text-sm text-slate-500 mt-1">全 {articles.length} 記事 — カテゴリーや難易度で絞り込めます</p>
+      </div>
+      <ArticleFilter articles={articles} />
     </div>
   );
 }
