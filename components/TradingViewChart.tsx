@@ -29,7 +29,7 @@ export default function TradingViewChart({
   useEffect(() => {
     if (!containerRef.current) return;
     const container = containerRef.current;
-    container.innerHTML = "";
+    container.innerHTML = `<div class="tradingview-widget-container__widget" style="height:${height}px;width:100%"></div>`;
 
     const config = {
       autosize: true,
@@ -80,7 +80,7 @@ export default function TradingViewChart({
       </div>
       <div
         ref={containerRef}
-        className="tradingview-widget-container__widget"
+        className="tradingview-widget-container"
         style={{ height }}
       />
     </div>
